@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Word Search Game</title>
+		<link rel="stylesheet" href="styles/main.css" />
+	</head>
+	<body>
+		<div id="topBar">
+			<button id="menuButton">☰</button>
+			<div id="topBarProgress">
+				<div class="progress-bar">
+					<div class="progress-fill"></div>
+				</div>
+				<div id="statsText">0/0 words found</div>
+			</div>
+			<div id="timer">00:00</div>
+		</div>
+
+		<div id="menuContainer">
+			<button id="closeMenuButton">×</button>
+			<h2>Settings</h2>
+			<div id="wins">Wins: 0</div>
+			<button id="newGameButton">New Game</button>
+			<!-- <button id="hintButton">💡</button> -->
+			<div class="setting">
+				<div class="setting-row">
+					<label class="setting-label">Sound</label>
+					<label class="toggle-switch">
+						<input type="checkbox" id="soundToggle" checked />
+						<span class="toggle-slider"></span>
+					</label>
+				</div>
+			</div>
+			<div class="setting">
+				<label for="difficulty">Difficulty:</label>
+				<select id="difficulty">
+					<option value="baby">Baby</option>
+					<option value="easy">Easy</option>
+					<option value="medium" selected>Medium</option>
+					<option value="hard">Hard</option>
+				</select>
+			</div>
+			<div class="setting">
+				<label for="category">Category:</label>
+				<select id="category">
+					<option value="animals" selected>Animals</option>
+					<option value="disney">Disney</option>
+					<option value="famousLandmarks">Famous Landmarks</option>
+					<option value="friendsAndFamilies">Friends & Family</option>
+					<option value="fruits">Fruits</option>
+					<option value="greekGods">Greek Gods</option>
+					<option value="harryPotter">Harry Potter</option>
+					<option value="space">Space</option>
+					<option value="superheroes">Superheroes</option>
+					<option value="vampireDiaries">Vampire Diaries</option>
+					<option value="vegetables">Vegetables</option>
+				</select>
+			</div>
+		</div>
+
+		<div id="menuOverlay"></div>
+
+		<div id="game">
+			<div id="wordSearchContainer">
+				<svg id="lineSVG">
+					<line
+						id="selectionLine"
+						x1="0"
+						y1="0"
+						x2="0"
+						y2="0"
+						stroke="#d500ff"
+						stroke-width="20"
+						stroke-opacity="0"
+						stroke-linecap="round"
+					/>
+				</svg>
+			</div>
+			<div id="wordsContainer"></div>
+			<div id="dotsContainer"></div>
+		</div>
+
+		<!-- Data -->
+		<script src="js/data/categories.js"></script>
+
+		<!-- Utils -->
+		<script src="js/utils/storage.js"></script>
+		<script src="js/utils/audio.js"></script>
+		<script src="js/utils/animations.js"></script>
+
+		<!-- Components -->
+		<script src="js/components/timer.js"></script>
+		<script src="js/components/menu.js"></script>
+		<script src="js/components/grid.js"></script>
+
+		<!-- Game Logic -->
+		<script src="js/game.js"></script>
+		<script src="js/main.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+	</body>
+</html>
