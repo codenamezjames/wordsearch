@@ -1,1 +1,134 @@
 // app global css in SCSS form
+
+// CSS Custom Properties fallback for older browsers
+@supports not (--css: variables) {
+  :root {
+    --q-primary: #1976d2;
+    --q-secondary: #26a69a;
+    --q-accent: #9c27b0;
+    --q-dark: #1d1d1d;
+  }
+}
+
+// Cross-browser flexbox fixes
+.flex {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.flex-center {
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+// Grid fallback for older browsers
+@supports not (display: grid) {
+  .game-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .grid-cell {
+      margin: 2px;
+    }
+  }
+}
+
+// Touch event fallback
+@supports not (touch-action: none) {
+  .game-grid {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+// Animation fallback
+@supports not (animation-name: dash) {
+  .selection-line.current {
+    opacity: 0.8;
+  }
+}
+
+// CSS containment fallback
+@supports not (contain: strict) {
+  .game-grid {
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+// Safari-specific fixes
+@supports (-webkit-touch-callout: none) {
+  .game-grid {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid-cell {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+// Firefox-specific fixes
+@-moz-document url-prefix() {
+  .selection-line {
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+// Edge/IE fixes
+@supports (-ms-ime-align: auto) {
+  .game-grid {
+    display: -ms-grid;
+    -ms-grid-columns: repeat(var(--grid-size), var(--cell-size));
+  }
+}
+
+// High contrast mode
+@media (forced-colors: active) {
+  .grid-cell {
+    border: 1px solid ButtonText;
+  }
+
+  .grid-cell.selected {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .selection-line {
+    stroke: Highlight;
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Print styles
+@media print {
+  .game-grid {
+    page-break-inside: avoid;
+  }
+
+  .selection-line,
+  .confetti-container {
+    display: none;
+  }
+}

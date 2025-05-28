@@ -1,0 +1,124 @@
+# Word Search Game - Quasar Migration Plan
+
+## Overview
+
+Migrating a vanilla JS word search game to Quasar Vue 3 framework.
+
+## Phase 1: Project Structure & Core Setup ✅
+
+- [x] Initialize Quasar project
+- [x] Move old code to ws-old directory
+- [x] Configure Quasar for game requirements (animations, SVG support)
+- [x] Set up proper ESLint rules for Vue 3 composition API
+- [x] Install additional dependencies (canvas-confetti)
+
+## Phase 2: Data & State Management ✅
+
+- [x] Convert categories.js to Pinia store (categoriesStore)
+- [x] Create gameStore for game state management
+  - [x] Current game state (grid, words, found words)
+  - [x] Timer state
+  - [x] Score tracking
+  - [x] Game settings
+- [x] Create userStore for persistent data
+  - [x] Stats/wins
+  - [x] User preferences
+  - [x] High scores
+
+## Phase 3: Utility Migration ✅
+
+- [x] Convert utils to composables:
+  - [x] useStorage.js - localStorage wrapper (replaced by Pinia stores)
+  - [x] useAudio.js - sound effects management
+  - [x] useAnimations.js - game animations (merged into useGameAnimations.js)
+  - [x] useScore.js - scoring logic (merged into useGameStats.js)
+- [x] Create additional composables:
+  - [x] useTimer.js - timer functionality
+  - [x] useWordSearch.js - core game logic (merged into useWordGrid.js)
+
+## Phase 4: Component Migration ✅
+
+- [x] Create Vue components:
+  - [x] GameGrid.vue - Main word search grid (from grid.js)
+  - [x] WordList.vue - List of words to find
+  - [x] GameTimer.vue - Timer display (from timer.js)
+  - [x] SettingsPanel.vue - Settings sidebar (from settings.js)
+  - [x] StartMenu.vue - Main menu (from startMenu.js)
+  - [x] TopBar.vue - Game header with timer/score
+  - [x] EndGameModal.vue - Victory/game over modal
+  - [x] ProgressBar.vue - Bottom progress indicator
+
+## Phase 5: Game Logic Migration ✅
+
+- [x] Port game.js logic to composables/stores:
+  - [x] Word placement algorithm (useWordGrid.js)
+  - [x] Selection/highlighting logic (useWordSelection.js)
+  - [x] Word validation (useWordGrid.js)
+  - [x] Game completion detection (useGameStats.js)
+- [x] Implement touch/mouse event handling in Vue way (useWordSelection.js)
+- [x] SVG line drawing for word selection (GameGrid.vue)
+
+## Phase 6: Routing & Pages ✅
+
+- [x] Set up Vue Router:
+  - [x] / - Start menu page
+  - [x] /game - Main game page
+  - [x] /stats - Statistics page
+  - [x] /upgrades - Upgrades page (if implemented)
+- [x] Create page components for each route
+
+## Phase 7: Styling & UI ✅
+
+- [x] Convert CSS to Quasar/Vue approach:
+  - [x] Use Quasar components where appropriate
+  - [x] Migrate custom styles to component-scoped styles
+  - [x] Implement responsive design with Quasar breakpoints
+- [x] Dark mode support
+
+## Phase 8: Testing & Optimization ✅
+
+- [x] Add unit tests for game logic
+  - [x] Grid generation and word placement
+  - [x] Timer functionality
+- [x] Test touch interactions on mobile
+  - [x] Add touch-action CSS property
+  - [x] Use passive event listeners
+  - [x] Add proper touch target size
+  - [x] Add visual feedback for touch
+  - [x] Optimize for touch devices
+- [x] Performance optimization:
+  - [x] Lazy loading for routes
+  - [x] Optimize grid rendering
+    - [x] Use CSS Grid with CSS variables
+    - [x] Flatten grid data structure
+    - [x] Add v-memo and v-once directives
+    - [x] Optimize DOM updates
+  - [x] Minimize re-renders
+    - [x] Add v-memo for conditional classes
+    - [x] Use shallowRef for modals
+    - [x] Add contain CSS property
+    - [x] Optimize watchers with flush: 'post'
+
+## Phase 9: Cleanup & Polish
+
+- [x] Remove ws-old directory after migration
+- [x] Update README with new setup instructions
+- [x] Add proper types via jsdocs
+- [~] Code review and refactoring for DRY principles
+  - [x] Create useTimeFormat composable for consistent time formatting
+  - [ ] Review and refactor score formatting
+  - [ ] Review and refactor game settings management
+  - [ ] Review and refactor animation handling
+- [ ] Add proper error handling
+
+## Current Status: Phase 9 - Cleanup & Polish
+
+Next step: Continue code review and refactoring, focusing on score formatting, game settings, and animation handling.
+
+## Notes:
+
+- Keep game logic separate from UI components
+- Use Composition API for better code organization
+- Leverage Quasar's built-in components to reduce custom code
+- Ensure mobile-first responsive design
+- Consider adding PWA capabilities (Quasar makes this easy)
