@@ -9,13 +9,8 @@
 	<body>
 		<div id="topBar">
 			<button id="menuButton">☰</button>
-			<div id="topBarProgress">
-				<div class="progress-bar">
-					<div class="progress-fill"></div>
-				</div>
-				<div id="statsText">0/0 words found</div>
-			</div>
-			<div id="timer">00:00</div>
+			<div id="timerCenter"><div id="timer">00:00</div></div>
+			<div id="scoreLive">Score: 0</div>
 		</div>
 
 		<div id="menuContainer">
@@ -80,6 +75,14 @@
 			</div>
 			<div id="wordsContainer"></div>
 			<div id="dotsContainer"></div>
+			<div id="bottomProgress">
+				<div id="bottomBarProgress">
+					<div class="progress-bar">
+						<div class="progress-fill"></div>
+					</div>
+					<div id="statsText">0/0 words found</div>
+				</div>
+			</div>
 		</div>
 
 		<!-- Data -->
@@ -89,6 +92,7 @@
 		<script src="js/utils/storage.js"></script>
 		<script src="js/utils/audio.js"></script>
 		<script src="js/utils/animations.js"></script>
+		<script src="js/utils/score.js"></script>
 
 		<!-- Components -->
 		<script src="js/components/timer.js"></script>
