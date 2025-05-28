@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Word Search Game</title>
+		<link rel="stylesheet" href="styles/main.css" />
+	</head>
+	<body>
+		<div id="topBar">
+			<button id="settingsButton">☰</button>
+			<div id="timerCenter"><div id="timer">00:00</div></div>
+			<div id="scoreLive">Score: 0</div>
+		</div>
+
+		<div id="settingsContainer">
+			<button id="closeSettingsButton">×</button>
+			<h2>Settings</h2>
+			<div id="wins">Wins: 0</div>
+			<button id="newGameButton">New Game</button>
+			<!-- <button id="hintButton">💡</button> -->
+			<div id="sharedSettingsForm"></div>
+			<button id="quitToMenuButton" class="btn" style="margin-top:32px;background:#ff5252;">Quit to Menu</button>
+		</div>
+
+		<div id="settingsOverlay"></div>
+
+		<div id="startMenuContainer" class="start-menu">
+			<h1>Word Search</h1>
+			<button id="startGameButton" class="btn">Start Game</button>
+			<button id="upgradesButton" class="btn">Upgrades</button>
+			<button id="statsButton" class="btn">Stats</button>
+			<button id="optionsButton" class="btn">Options</button>
+		</div>
+
+		<div id="optionsMenuContainer" class="options-menu hide">
+			<h2>Options</h2>
+			<div id="sharedSettingsFormOptions"></div>
+			<button id="closeOptionsMenuButton" class="btn" style="margin-top:32px;background:#ff5252;">Back</button>
+		</div>
+
+		<div id="game">
+			<div id="wordSearchContainer">
+				<svg id="lineSVG">
+					<line
+						id="selectionLine"
+						x1="0"
+						y1="0"
+						x2="0"
+						y2="0"
+						stroke="#d500ff"
+						stroke-width="20"
+						stroke-opacity="0"
+						stroke-linecap="round"
+					/>
+				</svg>
+			</div>
+			<div id="wordsContainer"></div>
+			<div id="dotsContainer"></div>
+			<div id="bottomProgress">
+				<div id="bottomBarProgress">
+					<div class="progress-bar">
+						<div class="progress-fill"></div>
+					</div>
+					<div id="statsText">0/0 words found</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Data -->
+		<script src="js/data/categories.js"></script>
+
+		<!-- Utils -->
+		<script src="js/utils/storage.js"></script>
+		<script src="js/utils/audio.js"></script>
+		<script src="js/utils/animations.js"></script>
+		<script src="js/utils/score.js"></script>
+
+		<!-- Components -->
+		<script src="js/components/timer.js"></script>
+		<script src="js/components/settings.js"></script>
+		<script src="js/components/grid.js"></script>
+		<script src="js/components/startMenu.js"></script>
+
+		<!-- Game Logic -->
+		<script src="js/game.js"></script>
+		<script src="js/main.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+<!-- End Game Modal -->
+		<div id="modalOverlay" role="dialog" aria-modal="true">
+			<div id="modalDialog" tabindex="-1" aria-labelledby="modal-title"></div>
+ 		</div>
+	</body>
+</html>
