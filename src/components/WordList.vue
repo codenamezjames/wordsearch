@@ -1,42 +1,21 @@
 <!-- WordList.vue - List of words to find -->
 <template>
-  <div class="word-list">
-    <div class="word-list-header">
-      <h2 class="text-h6">Words to Find</h2>
-      <q-badge :color="progress === 100 ? 'positive' : 'primary'" class="progress-badge">
-        {{ foundWordsCount }}/{{ totalWords }}
-      </q-badge>
-    </div>
-
-    <q-list separator>
-      <q-item
+  <div class="word-list-compact">
+    <div class="words-grid">
+      <div
         v-for="word in words"
         :key="word"
-        :class="{ found: isWordFound(word) }"
-        class="word-item"
+        :class="{ found: isWordFound(word), pending: !isWordFound(word) }"
+        class="word-chip"
       >
-        <q-item-section>
-          <q-item-label :class="{ 'text-strike': isWordFound(word) }">
-            {{ word }}
-          </q-item-label>
-        </q-item-section>
+        <span class="word-text">{{ word }}</span>
+        <q-icon v-if="isWordFound(word)" name="check_circle" class="word-icon found-icon" />
+      </div>
+    </div>
 
-        <q-item-section side v-if="isWordFound(word)">
-          <q-icon name="check" color="positive" />
-        </q-item-section>
-
-        <q-item-section side v-else-if="hintsEnabled">
-          <q-btn flat round dense color="grey" icon="help" @click="showHint(word)">
-            <q-tooltip>Show hint for {{ word }}</q-tooltip>
-          </q-btn>
-        </q-item-section>
-      </q-item>
-    </q-list>
-
-    <!-- Empty state -->
     <div v-if="!words.length" class="empty-state">
-      <q-icon name="search" size="2rem" color="grey-6" />
-      <p class="text-grey-6">No words loaded</p>
+      <q-icon name="search" size="1.5rem" color="rgba(255,255,255,0.5)" />
+      <span class="empty-text">No words loaded</span>
     </div>
   </div>
 </template>
@@ -44,80 +23,115 @@
 <script setup>
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { useQuasar } from 'quasar'
 
-const $q = useQuasar()
 const gameStore = useGameStore()
 
 // Computed properties from game store
 const words = computed(() => gameStore.words)
-const foundWordsCount = computed(() => gameStore.foundWordsCount)
-const totalWords = computed(() => gameStore.totalWords)
-const progress = computed(() => gameStore.progress)
-const hintsEnabled = computed(() => gameStore.hintsEnabled)
 
 // Check if a word has been found
 const isWordFound = (word) => gameStore.foundWords.has(word)
-
-// Show hint for a word (if hints are enabled)
-const showHint = (word) => {
-  // This will be implemented when we add hint functionality
-  $q.notify({
-    message: `Hint for "${word}" coming soon!`,
-    color: 'info',
-    icon: 'help',
-  })
-}
 </script>
 
 <style scoped>
-.word-list {
+.word-list-compact {
   width: 100%;
-  max-width: 300px;
-  border-radius: 8px;
-  padding: 1rem;
+  padding: 8px 0;
 }
 
-.word-list-header {
+.words-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+}
+
+.word-chip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  backdrop-filter: blur(5px);
+  border: 1px solid transparent;
 }
 
-.word-list-header h2 {
-  margin: 0;
+.word-chip.pending {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.progress-badge {
-  font-size: 1rem;
-  padding: 4px 8px;
+.word-chip.found {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.3);
+  transform: scale(0.95);
 }
 
-.word-item {
-  transition: background-color 0.3s ease;
-  border-radius: 4px;
+.word-chip.found .word-text {
+  text-decoration: line-through;
+  opacity: 0.8;
 }
 
-.word-item.found {
-  background-color: var(--q-positive);
-  background-opacity: 0.1;
+.word-chip.found .found-icon {
+  color: #4caf50;
+  font-size: 16px;
 }
 
-.word-item:hover {
-  background: rgba(0, 0, 0, 0.03);
+.word-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.word-text {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.word-icon {
+  font-size: 14px;
 }
 
 .empty-state {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  text-align: center;
+  gap: 8px;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.empty-state p {
-  margin: 0.5rem 0 0;
+.empty-text {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .word-chip {
+    font-size: 12px;
+    padding: 4px 8px;
+    gap: 3px;
+  }
+
+  .words-grid {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .word-chip {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .words-grid {
+    gap: 4px;
+  }
 }
 </style>

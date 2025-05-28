@@ -32,9 +32,12 @@ export const useGameStore = defineStore('game', {
 
       // Score state
       score: 0,
-      lastWordTime: 0,
-      totalAttempts: 0,
-      combo: 0,
+      baseWordPoints: 100,
+      lastWordFoundTime: 0,
+      currentWordStartTime: 0,
+      scoreMultiplier: 1,
+      chainMultiplier: 1,
+      gracePeriod: 3, // 3 seconds grace period
 
       // Settings
       soundEnabled: true,
@@ -47,8 +50,15 @@ export const useGameStore = defineStore('game', {
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState)
-        // Convert foundWords back to Set
         parsed.foundWords = new Set(parsed.foundWords)
+        // Ensure numeric values are properly initialized when loading saved state
+        parsed.score = Number(parsed.score) || 0
+        parsed.baseWordPoints = Number(parsed.baseWordPoints) || 100
+        parsed.lastWordFoundTime = Number(parsed.lastWordFoundTime) || 0
+        parsed.currentWordStartTime = Number(parsed.currentWordStartTime) || 0
+        parsed.scoreMultiplier = Number(parsed.scoreMultiplier) || 1
+        parsed.chainMultiplier = Number(parsed.chainMultiplier) || 1
+        parsed.gracePeriod = Number(parsed.gracePeriod) || 3
         return parsed
       } catch (e) {
         console.error('Error parsing saved state:', e)
@@ -120,9 +130,10 @@ export const useGameStore = defineStore('game', {
       this.gameComplete = false
       this.foundWords = new Set()
       this.score = 0
-      this.lastWordTime = 0
-      this.totalAttempts = 0
-      this.combo = 0
+      this.lastWordFoundTime = 0
+      this.currentWordStartTime = 0
+      this.scoreMultiplier = 1
+      this.chainMultiplier = 1
       this.timer.seconds = 0
       this.timer.isRunning = false
       this.selectedCells = []
@@ -225,32 +236,67 @@ export const useGameStore = defineStore('game', {
           this.lastFoundWordData = wordData
         }
 
-        // Calculate and add score
-        const timeSinceLastWord = this.timer.seconds - this.lastWordTime
-        const baseScore = 100
-        const difficultyMultiplier =
+        // Ensure all values are numbers and have fallbacks
+        const currentTime = Number(this.timer.seconds) || 0
+        const startTime = Number(this.currentWordStartTime) || 0
+        const basePoints = Number(this.baseWordPoints) || 100
+        const scoreMultiplier = Number(this.scoreMultiplier) || 1
+        const chainMultiplier = Number(this.chainMultiplier) || 1
+        const gracePeriod = Number(this.gracePeriod) || 3
+
+        // Calculate time elapsed since last word or game start
+        const timeElapsed = Math.max(0, currentTime - startTime)
+
+        // Only reduce points after grace period
+        const effectiveTimeElapsed = Math.max(0, timeElapsed - gracePeriod)
+
+        // Calculate base points with minimum of 10
+        let points = Math.max(10, basePoints - effectiveTimeElapsed)
+
+        // Apply difficulty multiplier
+        const difficultyMultiplier = Number(
           {
             baby: 0.5,
             easy: 1,
             medium: 1.5,
             hard: 2,
-          }[this.difficulty] || 1
+          }[this.difficulty] || 1,
+        )
 
-        // Calculate score with time bonus and difficulty multiplier
-        let points = baseScore * difficultyMultiplier
-        if (timeSinceLastWord < 5) {
-          points *= 1.5 // Speed bonus
-          this.combo++
-        } else {
-          this.combo = 0
-        }
+        points = points * difficultyMultiplier
 
-        // Add combo bonus
-        points *= 1 + this.combo * 0.1
+        // Ensure minimum points after difficulty multiplier
+        points = Math.max(10, points)
 
-        // Update score and last word time
-        this.score += Math.round(points)
-        this.lastWordTime = this.timer.seconds
+        // Apply any active multipliers
+        points = points * scoreMultiplier * chainMultiplier
+
+        // Round the final score and ensure minimum of 10
+        points = Math.max(10, Math.round(points))
+
+        // Debug log all values
+        console.log('Score calculation debug:', {
+          currentTime,
+          startTime,
+          timeElapsed,
+          gracePeriod,
+          effectiveTimeElapsed,
+          basePoints,
+          difficultyMultiplier,
+          scoreMultiplier,
+          chainMultiplier,
+          pointsBeforeRound: points,
+          finalPoints: Math.max(10, Math.round(points)),
+          currentScore: this.score,
+          isPerfectTiming: timeElapsed <= gracePeriod ? 'Yes! 🌟' : 'No',
+        })
+
+        // Update score - ensure we're adding a number
+        this.score = Number(this.score || 0) + points
+
+        // Reset timer for next word
+        this.lastWordFoundTime = currentTime
+        this.currentWordStartTime = currentTime
 
         // Save state after updating
         this.saveState()
@@ -259,7 +305,10 @@ export const useGameStore = defineStore('game', {
         if (this.isGameComplete) {
           this.handleWin()
         }
+
+        return points
       }
+      return 0
     },
 
     handleWin() {
@@ -335,6 +384,21 @@ export const useGameStore = defineStore('game', {
       this.selectedCells = []
       this.permanentLines = []
       this.saveState()
+    },
+
+    // Add method to update multipliers (for future use)
+    updateMultipliers(scoreMultiplier = null, chainMultiplier = null) {
+      if (scoreMultiplier !== null) {
+        this.scoreMultiplier = Number(scoreMultiplier) || 1
+      }
+      if (chainMultiplier !== null) {
+        this.chainMultiplier = Number(chainMultiplier) || 1
+      }
+    },
+
+    // Add method to set base word points (for future use)
+    setBaseWordPoints(points) {
+      this.baseWordPoints = Number(points) || 100
     },
   },
 })
