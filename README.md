@@ -15,7 +15,7 @@ A modern, interactive word search game built with vanilla JavaScript. Features s
 
 ## 🚀 Live Demo
 
-Play the game here: [Word Search Game](https://[your-github-username].github.io/wordsearch/)
+Play the game here: [Word Search Game](https://codenamezjames.github.io/wordsearch/)
 
 ## 🛠️ Technologies Used
 

@@ -400,8 +400,9 @@ class Game {
     }
 
     // Replace words list with New Game button and show score and high score
-    const wordsContainer = document.getElementById("wordsContainer");
-    wordsContainer.innerHTML = `
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalDialog = document.getElementById("modalDialog");
+    modalDialog.innerHTML = `
       <div class="win-message">
         <h2>Congratulations!</h2>
         <p>You found all words in ${this.timer.formatTime(this.timer.time)}!</p>
@@ -420,11 +421,13 @@ class Game {
         <button class="btn win-new-game">Play Again</button>
       </div>
     `;
+    modalOverlay.classList.add("active");
 
     // Add event listener to the new button
-    const newGameBtn = wordsContainer.querySelector(".win-new-game");
+    const newGameBtn = modalDialog.querySelector(".win-new-game");
     if (newGameBtn) {
       newGameBtn.addEventListener("click", () => {
+        modalOverlay.classList.remove("active");
         this.startNewGame();
       });
     }
