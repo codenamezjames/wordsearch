@@ -188,13 +188,6 @@ const categories = computed(() => {
   }
 
   return [
-    {
-      id: 'random',
-      name: 'Random Theme',
-      description: 'Surprise yourself',
-      icon: 'shuffle',
-      color: categoryData.random?.color || '#1976D2',
-    },
     ...categoriesStore.categoryNames.map((name) => ({
       id: name,
       name: categoriesStore.getCategoryDisplayName(name),
