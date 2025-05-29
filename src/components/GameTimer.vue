@@ -1,18 +1,6 @@
 <!-- GameTimer.vue - Game timer display component -->
 <template>
   <div class="game-timer">
-    <q-circular-progress
-      :value="progressValue"
-      :min="0"
-      :max="maxTime"
-      :color="timerColor"
-      size="60px"
-      :thickness="0.2"
-      class="q-mr-sm"
-    >
-      <q-icon :name="timerIcon" :color="timerColor" size="24px" />
-    </q-circular-progress>
-
     <div class="timer-details">
       <div class="time-display text-h5" :class="timerColor">
         {{ formattedTime }}
@@ -83,13 +71,6 @@ const timerColor = computed(() => {
   if (progressValue.value >= 80) return 'negative'
   if (progressValue.value >= 60) return 'warning'
   return 'positive'
-})
-
-// Dynamic timer icon based on state
-const timerIcon = computed(() => {
-  if (!isRunning.value) return 'timer'
-  if (progressValue.value >= 80) return 'timer_off'
-  return 'schedule'
 })
 
 // Timer controls
