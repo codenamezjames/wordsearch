@@ -234,6 +234,8 @@ export function useWordSelection() {
       x: startCell.x + Math.round(stepX * i),
       y: startCell.y + Math.round(stepY * i),
     }))
+
+    console.log('Selection updated:', selectedCells.value.length, 'cells selected')
   }
 
   /**
@@ -245,7 +247,7 @@ export function useWordSelection() {
 
     // Get letters from selected cells
     const word = selectedCells.value
-      .map((cell) => {
+      .map((cell, index) => {
         // Ensure we're within grid bounds
         if (
           cell.y >= 0 &&
@@ -253,19 +255,31 @@ export function useWordSelection() {
           cell.x >= 0 &&
           cell.x < gameStore.grid[cell.y].length
         ) {
-          return gameStore.grid[cell.y][cell.x]
+          const letter = gameStore.grid[cell.y][cell.x]
+          console.log(`Cell ${index}: (${cell.x}, ${cell.y}) = "${letter}"`)
+          return letter
         }
+        console.log(`Cell ${index}: (${cell.x}, ${cell.y}) = OUT OF BOUNDS`)
         return ''
       })
       .join('')
 
-    // Check forward and reverse
-    if (gameStore.words.includes(word)) {
-      return word
+    console.log('Word formed:', word)
+    console.log('Available words:', gameStore.words)
+    console.log('Grid state (gameStore.grid):', gameStore.grid)
+    console.log('Selected cells:', selectedCells.value)
+
+    // Check forward and reverse (case-insensitive)
+    const upperWord = word.toUpperCase()
+    const upperWords = gameStore.words.map((w) => w.toUpperCase())
+
+    if (upperWords.includes(upperWord)) {
+      return gameStore.words[upperWords.indexOf(upperWord)]
     }
     const reversed = word.split('').reverse().join('')
-    if (gameStore.words.includes(reversed)) {
-      return reversed
+    const upperReversed = reversed.toUpperCase()
+    if (upperWords.includes(upperReversed)) {
+      return gameStore.words[upperWords.indexOf(upperReversed)]
     }
 
     return null
@@ -277,7 +291,9 @@ export function useWordSelection() {
   const handleSelectionEnd = () => {
     if (!isSelecting.value) return
 
+    console.log('Selection ended with cells:', selectedCells.value)
     const word = checkForWord()
+    console.log('Word check result:', word)
     if (word) {
       // Capture selected cells data before clearing
       const foundWordData = {

@@ -14,17 +14,6 @@
     </div>
 
     <div class="menu-container">
-      <!-- Hero Section -->
-      <div class="hero-section">
-        <div class="logo-container">
-          <div class="logo-text">
-            <span class="word">Word</span>
-            <span class="search">Search</span>
-          </div>
-          <div class="logo-subtitle">Challenge your word-finding skills</div>
-        </div>
-      </div>
-
       <!-- Main Menu Card -->
       <div class="menu-card">
         <!-- Category Selection -->
@@ -83,19 +72,40 @@
 
         <!-- Action Buttons -->
         <div class="action-section">
-          <q-btn
-            class="start-button"
-            :class="{ ready: canStartGame }"
-            :disable="!canStartGame"
-            :to="{ name: 'game' }"
-            size="xl"
-            no-caps
-            unelevated
-          >
-            <q-icon name="play_arrow" class="start-icon" />
-            <span>Start Adventure</span>
-            <div class="button-glow"></div>
-          </q-btn>
+          <div class="row q-col-gutter-md q-mt-lg">
+            <div class="col-6">
+              <q-btn
+                class="start-button"
+                :class="{ ready: canStartGame }"
+                :disable="!canStartGame"
+                @click="startSingleGame"
+                size="lg"
+                color="primary"
+                no-caps
+                unelevated
+              >
+                <q-icon name="grid_on" class="start-icon" />
+                <span>Single Board</span>
+                <div class="button-glow"></div>
+              </q-btn>
+            </div>
+            <div class="col-6">
+              <q-btn
+                class="start-button challenge-button"
+                :class="{ ready: canStartGame }"
+                :disable="!canStartGame"
+                @click="showChallengeDialog = true"
+                size="lg"
+                color="secondary"
+                no-caps
+                unelevated
+              >
+                <q-icon name="emoji_events" class="start-icon" />
+                <span>Challenge Mode</span>
+                <div class="button-glow"></div>
+              </q-btn>
+            </div>
+          </div>
 
           <div class="secondary-actions">
             <q-btn
@@ -118,6 +128,53 @@
         </div>
       </div>
     </div>
+
+    <!-- Challenge Mode Dialog -->
+    <q-dialog v-model="showChallengeDialog">
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">Challenge Mode Setup</div>
+          <div class="text-caption q-mt-sm">Complete 10 rounds and reach the target score!</div>
+        </q-card-section>
+
+        <q-card-section>
+          <div class="q-mb-md">
+            <div class="text-subtitle2 q-mb-sm">Difficulty</div>
+            <div class="text-caption text-grey-7 q-mb-sm">
+              Target Score: {{ getChallengeTarget(tempDifficulty).toLocaleString() }} points
+            </div>
+            <q-btn-toggle
+              v-model="tempDifficulty"
+              spread
+              class="full-width"
+              toggle-color="primary"
+              :options="[
+                { label: 'Baby', value: 'baby' },
+                { label: 'Easy', value: 'easy' },
+                { label: 'Medium', value: 'medium' },
+                { label: 'Hard', value: 'hard' },
+              ]"
+            />
+          </div>
+
+          <div>
+            <div class="text-subtitle2 q-mb-sm">Category</div>
+            <q-select
+              v-model="tempCategory"
+              :options="categoryOptions"
+              filled
+              emit-value
+              map-options
+            />
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn color="primary" label="Start Challenge" @click="startChallengeMode" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- Settings Dialog (if needed) -->
     <q-dialog v-model="showSettings">
@@ -153,12 +210,19 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useGameStore } from '../stores/game'
 import { useCategoriesStore } from '../stores/categories'
 
+const router = useRouter()
 const gameStore = useGameStore()
 const categoriesStore = useCategoriesStore()
 const showSettings = ref(false)
+
+// Challenge Mode refs
+const showChallengeDialog = ref(false)
+const tempDifficulty = ref('medium')
+const tempCategory = ref('animals')
 
 // Settings
 const soundEnabled = computed(() => gameStore.soundEnabled)
@@ -252,6 +316,14 @@ const selectedCategory = computed(() => gameStore.currentCategory)
 const selectedDifficulty = computed(() => gameStore.difficulty)
 const canStartGame = computed(() => selectedCategory.value && selectedDifficulty.value)
 
+// Challenge Mode computed
+const categoryOptions = computed(() =>
+  categoriesStore.categoryNames.map((name) => ({
+    label: name.charAt(0).toUpperCase() + name.slice(1),
+    value: name,
+  })),
+)
+
 // Actions
 const selectCategory = (category) => {
   gameStore.setCategory(category)
@@ -259,6 +331,30 @@ const selectCategory = (category) => {
 
 const selectDifficulty = (difficulty) => {
   gameStore.setDifficulty(difficulty)
+}
+
+// Challenge Mode methods
+const getChallengeTarget = (difficulty) => {
+  const targets = {
+    baby: 3000,
+    easy: 5000,
+    medium: 10000,
+    hard: 15000,
+  }
+  return targets[difficulty] || 10000
+}
+
+const startSingleGame = () => {
+  gameStore.challengeMode.isActive = false
+  gameStore.startNewGame()
+  router.push({ name: 'game' })
+}
+
+const startChallengeMode = () => {
+  showChallengeDialog.value = false
+  gameStore.initChallengeMode(tempCategory.value, tempDifficulty.value)
+  gameStore.startNewGame()
+  router.push({ name: 'challenge' })
 }
 
 // Initialize background animation

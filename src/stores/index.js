@@ -18,3 +18,22 @@ export default defineStore((/* { ssrContext } */) => {
 
   return pinia
 })
+
+// Export the new sub-stores for direct access if needed
+export { useGameStateStore } from './gameState'
+export { useGameTimerStore } from './gameTimer'
+export { useGameScoringStore } from './gameScoring'
+export { useChallengeModeStore } from './challengeMode'
+
+// Export storage services
+export {
+  gameStorage,
+  gameStateStorage,
+  userDataStorage,
+  settingsStorage,
+  StorageService,
+  StorageError,
+} from '../services/StorageService'
+
+// Export game engine
+export { gameEngine, GameEngine, EventBus, BaseModifier } from '../engine'

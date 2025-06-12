@@ -115,7 +115,7 @@ const hintsAvailable = computed(() => gameStore.hintsEnabled && !gameStore.gameC
 watch(
   () => gameStore.gameComplete,
   (complete) => {
-    if (complete) {
+    if (complete && !gameStore.isChallengeMode) {
       showEndGame.value = true
     }
   },

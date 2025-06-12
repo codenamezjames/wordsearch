@@ -35,9 +35,9 @@ const themeStore = useThemeStore()
 const { isDark } = storeToRefs(themeStore)
 const { toggleDarkMode } = themeStore
 
-// Only show header on non-game pages
+// Only show header on non-game pages and non-challenge pages
 const showHeader = computed(() => {
-  return route.name !== 'game'
+  return route.name !== 'game' && route.name !== 'challenge'
 })
 </script>
 

@@ -1,308 +1,135 @@
 import { defineStore } from 'pinia'
+import { useGameStateStore } from './gameState'
+import { useGameTimerStore } from './gameTimer'
+import { useGameScoringStore } from './gameScoring'
+import { useChallengeModeStore } from './challengeMode'
 import { useCategoriesStore } from './categories'
-
-const STORAGE_KEY = 'word-search-game-state'
+import { saveSettings, loadSettings } from '../services/GameStateStorage'
 
 export const useGameStore = defineStore('game', {
-  state: () => {
-    // Try to load state from localStorage
-    const savedState = localStorage.getItem(STORAGE_KEY)
-    const defaultState = {
-      // Grid state
-      grid: [],
-      gridSize: 10,
-
-      // Game state
-      isGameActive: false,
-      gameComplete: false,
-      currentCategory: 'animals',
-      difficulty: 'medium',
-      words: [],
-      foundWords: new Set(),
-      selectedCells: [],
-      permanentLines: [],
-
-      // Timer state
-      timer: {
-        seconds: 0,
-        isRunning: false,
-        maxTime: 300, // 5 minutes default
-        interval: null,
-      },
-
-      // Score state
-      score: 0,
-      baseWordPoints: 100,
-      lastWordFoundTime: 0,
-      currentWordStartTime: 0,
-      scoreMultiplier: 1,
-      chainMultiplier: 1,
-      gracePeriod: 3, // 3 seconds grace period
-
-      // Settings
-      soundEnabled: true,
-      hintsEnabled: false,
-
-      // Animation data
-      lastFoundWordData: null,
-    }
-
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState)
-        parsed.foundWords = new Set(parsed.foundWords)
-        // Ensure numeric values are properly initialized when loading saved state
-        parsed.score = Number(parsed.score) || 0
-        parsed.baseWordPoints = Number(parsed.baseWordPoints) || 100
-        parsed.lastWordFoundTime = Number(parsed.lastWordFoundTime) || 0
-        parsed.currentWordStartTime = Number(parsed.currentWordStartTime) || 0
-        parsed.scoreMultiplier = Number(parsed.scoreMultiplier) || 1
-        parsed.chainMultiplier = Number(parsed.chainMultiplier) || 1
-        parsed.gracePeriod = Number(parsed.gracePeriod) || 3
-        return parsed
-      } catch (e) {
-        console.error('Error parsing saved state:', e)
-        return defaultState
-      }
-    }
-
-    return defaultState
-  },
+  state: () => ({
+    // App-level settings that don't belong in individual stores
+    appSettings: {
+      darkMode: false,
+      vibrationEnabled: true,
+      autoSave: true,
+    },
+    // Flag to track if stores have been initialized
+    initialized: false,
+  }),
 
   getters: {
-    foundWordsCount: (state) => state.foundWords.size,
-    totalWords: (state) => state.words.length,
-    progress: (state) =>
-      state.words.length > 0 ? (state.foundWords.size / state.words.length) * 100 : 0,
-    isGameComplete: (state) =>
-      state.foundWords.size === state.words.length && state.words.length > 0,
+    // Delegate to sub-stores for backward compatibility
+    grid: () => useGameStateStore().grid,
+    gridSize: () => useGameStateStore().gridSize,
+    isGameActive: () => useGameStateStore().isGameActive,
+    gameComplete: () => useGameStateStore().gameComplete,
+    currentCategory: () => useGameStateStore().currentCategory,
+    difficulty: () => useGameStateStore().difficulty,
+    words: () => useGameStateStore().words,
+    foundWords: () => useGameStateStore().foundWords,
+    foundWordsCount: () => useGameStateStore().foundWordsCount,
+    totalWords: () => useGameStateStore().totalWords,
+    progress: () => useGameStateStore().progress,
+    soundEnabled: () => useGameStateStore().soundEnabled,
+    hintsEnabled: () => useGameStateStore().hintsEnabled,
+    lastFoundWordData: () => useGameStateStore().lastFoundWordData,
+    selectedCells: () => useGameStateStore().selectedCells,
+    permanentLines: () => useGameStateStore().permanentLines,
+    isGameComplete: () => useGameStateStore().isGameComplete,
+    gridSizeForDifficulty: () => useGameStateStore().gridSizeForDifficulty,
+    wordCountForDifficulty: () => useGameStateStore().wordCountForDifficulty,
 
-    formattedTime: (state) => {
-      const minutes = Math.floor(state.timer.seconds / 60)
-      const seconds = state.timer.seconds % 60
-      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-    },
+    // Timer getters
+    timer: () => ({
+      seconds: useGameTimerStore().seconds,
+      isRunning: useGameTimerStore().isRunning,
+    }),
+    formattedTime: () => useGameTimerStore().formattedTime,
 
-    gridSizeForDifficulty: (state) => {
-      const sizes = {
-        baby: 8,
-        easy: 8,
-        medium: 10,
-        hard: 12,
-      }
-      return sizes[state.difficulty] || 10
-    },
+    // Scoring getters
+    score: () => useGameScoringStore().score,
+    totalAttempts: () => useGameScoringStore().totalAttempts,
+    formattedScore: () => useGameScoringStore().formattedScore,
 
-    wordCountForDifficulty: (state) => {
-      const counts = {
-        baby: 1,
-        easy: 5,
-        medium: 8,
-        hard: 12,
-      }
-      return counts[state.difficulty] || 8
-    },
+    // Challenge mode getters
+    challengeMode: () => useChallengeModeStore().$state,
+    isChallengeMode: () => useChallengeModeStore().isActive,
+    challengeProgress: () => useChallengeModeStore().challengeProgress,
+    challengeRoundsRemaining: () => useChallengeModeStore().roundsRemaining,
   },
 
   actions: {
-    // Add save state method
-    saveState() {
-      try {
-        // Convert Set to Array for JSON serialization
-        const stateToSave = {
-          ...this.$state,
-          foundWords: Array.from(this.foundWords),
-          // Don't save timer interval
-          timer: { ...this.timer, interval: null },
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave))
-      } catch (e) {
-        console.error('Error saving state:', e)
-      }
+    /**
+     * Initialize all stores and load saved data
+     */
+    initialize() {
+      if (this.initialized) return
+
+      // Load settings first
+      this.loadSettings()
+
+      // Initialize sub-stores
+      const gameState = useGameStateStore()
+      const timer = useGameTimerStore()
+      const scoring = useGameScoringStore()
+      const challenge = useChallengeModeStore()
+
+      // Load saved state for each store
+      gameState.loadState()
+      timer.loadState()
+      scoring.loadState()
+      challenge.loadState()
+
+      this.initialized = true
     },
 
-    initGame() {
-      // Stop any existing timer
-      this.stopTimer()
-
-      // Initialize the game without starting it
-      this.isGameActive = false
-      this.gameComplete = false
-      this.foundWords = new Set()
-      this.score = 0
-      this.lastWordFoundTime = 0
-      this.currentWordStartTime = 0
-      this.scoreMultiplier = 1
-      this.chainMultiplier = 1
-      this.timer.seconds = 0
-      this.timer.isRunning = false
-      this.selectedCells = []
-      this.permanentLines = []
-
-      // Set grid size based on difficulty
-      this.gridSize = this.gridSizeForDifficulty
-      // Initialize empty grid
-      this.grid = Array(this.gridSize)
-        .fill(null)
-        .map(() => Array(this.gridSize).fill(''))
-
-      this.saveState()
-    },
-
+    /**
+     * Start a new game
+     */
     startNewGame() {
-      // Reset game state first
-      this.initGame()
+      // Ensure stores are initialized
+      this.initialize()
+
+      const gameState = useGameStateStore()
+      const timer = useGameTimerStore()
+      const scoring = useGameScoringStore()
+      const categories = useCategoriesStore()
+
+      // Reset all stores
+      gameState.resetGameState()
+      timer.resetTimer()
+      scoring.resetScore()
 
       // Get words for category
-      const categoriesStore = useCategoriesStore()
-
-      // Validate category exists
-      if (!categoriesStore.categoryNames.includes(this.currentCategory)) {
-        console.error('Invalid category:', this.currentCategory)
-        this.currentCategory = 'animals' // fallback to default
-      }
-
-      // Get words and validate
-      const selectedWords = categoriesStore.getRandomWords(
-        this.currentCategory,
-        this.wordCountForDifficulty,
+      const selectedWords = categories.getRandomWords(
+        gameState.currentCategory,
+        gameState.wordCountForDifficulty,
       )
 
       if (!selectedWords || selectedWords.length === 0) {
-        console.error('Failed to get words for category:', this.currentCategory)
+        console.error('Failed to get words for category:', gameState.currentCategory)
         return
       }
 
-      // Set words before grid initialization
-      this.words = selectedWords
-
-      // Start the game
-      this.isGameActive = true
-      this.timer.isRunning = true
-
-      // Start timer interval
-      this.startTimer()
-
-      // Save state after game starts
-      this.saveState()
+      // Set up new game
+      gameState.words = selectedWords
+      gameState.isGameActive = true
+      timer.startTimer()
     },
 
-    startTimer() {
-      if (this.timer.interval) {
-        clearInterval(this.timer.interval)
-      }
-      this.timer.interval = setInterval(() => {
-        if (this.timer.isRunning) {
-          this.timer.seconds++
-        }
-      }, 1000)
-    },
-
-    stopTimer() {
-      if (this.timer.interval) {
-        clearInterval(this.timer.interval)
-        this.timer.interval = null
-      }
-      this.timer.isRunning = false
-    },
-
-    updateGrid(newGrid) {
-      this.grid = JSON.parse(JSON.stringify(newGrid)) // Deep copy to ensure reactivity
-    },
-
-    handleSelection(x, y) {
-      if (!this.isGameActive) return
-
-      // Only increment attempts when we have at least 2 cells selected
-      // This prevents counting single cell selections as attempts
-      if (this.selectedCells.length >= 1) {
-        this.totalAttempts++
-      }
-
-      this.selectedCells.push({ x, y })
-    },
-
-    clearSelection() {
-      this.selectedCells = []
-    },
-
+    /**
+     * Add a found word and calculate score
+     */
     addFoundWord(word, wordData = null) {
-      if (!this.foundWords.has(word)) {
-        console.log('Found new word:', word)
-        this.foundWords.add(word)
+      const gameState = useGameStateStore()
+      const scoring = useGameScoringStore()
 
-        // Store the word data for animations
-        if (wordData) {
-          this.lastFoundWordData = wordData
-        }
+      if (gameState.addFoundWord(word, wordData)) {
+        const points = scoring.calculateWordScore(word)
+        scoring.addScore(points)
 
-        // Ensure all values are numbers and have fallbacks
-        const currentTime = Number(this.timer.seconds) || 0
-        const startTime = Number(this.currentWordStartTime) || 0
-        const basePoints = Number(this.baseWordPoints) || 100
-        const scoreMultiplier = Number(this.scoreMultiplier) || 1
-        const chainMultiplier = Number(this.chainMultiplier) || 1
-        const gracePeriod = Number(this.gracePeriod) || 3
-
-        // Calculate time elapsed since last word or game start
-        const timeElapsed = Math.max(0, currentTime - startTime)
-
-        // Only reduce points after grace period
-        const effectiveTimeElapsed = Math.max(0, timeElapsed - gracePeriod)
-
-        // Calculate base points with minimum of 10
-        let points = Math.max(10, basePoints - effectiveTimeElapsed)
-
-        // Apply difficulty multiplier
-        const difficultyMultiplier = Number(
-          {
-            baby: 0.5,
-            easy: 1,
-            medium: 1.5,
-            hard: 2,
-          }[this.difficulty] || 1,
-        )
-
-        points = points * difficultyMultiplier
-
-        // Ensure minimum points after difficulty multiplier
-        points = Math.max(10, points)
-
-        // Apply any active multipliers
-        points = points * scoreMultiplier * chainMultiplier
-
-        // Round the final score and ensure minimum of 10
-        points = Math.max(10, Math.round(points))
-
-        // Debug log all values
-        console.log('Score calculation debug:', {
-          currentTime,
-          startTime,
-          timeElapsed,
-          gracePeriod,
-          effectiveTimeElapsed,
-          basePoints,
-          difficultyMultiplier,
-          scoreMultiplier,
-          chainMultiplier,
-          pointsBeforeRound: points,
-          finalPoints: Math.max(10, Math.round(points)),
-          currentScore: this.score,
-          isPerfectTiming: timeElapsed <= gracePeriod ? 'Yes! 🌟' : 'No',
-        })
-
-        // Update score - ensure we're adding a number
-        this.score = Number(this.score || 0) + points
-
-        // Reset timer for next word
-        this.lastWordFoundTime = currentTime
-        this.currentWordStartTime = currentTime
-
-        // Save state after updating
-        this.saveState()
-
-        // Check for game completion
-        if (this.isGameComplete) {
+        if (gameState.isGameComplete) {
           this.handleWin()
         }
 
@@ -311,94 +138,67 @@ export const useGameStore = defineStore('game', {
       return 0
     },
 
+    /**
+     * Handle game completion
+     */
     handleWin() {
-      console.log('Game won!')
-      this.isGameActive = false
-      this.gameComplete = true
-      this.timer.isRunning = false
+      const gameState = useGameStateStore()
+      const timer = useGameTimerStore()
+      const challengeMode = useChallengeModeStore()
+      const scoring = useGameScoringStore()
+
+      gameState.isGameActive = false
+      gameState.gameComplete = true
+      timer.stopTimer()
+
+      if (challengeMode.isActive) {
+        challengeMode.completeRound(scoring.score)
+      }
     },
 
-    setDifficulty(difficulty) {
-      if (this.difficulty !== difficulty) {
-        console.log('Setting difficulty to:', difficulty)
-        this.difficulty = difficulty
+    // Settings management
+    saveSettings() {
+      saveSettings(this.appSettings)
+    },
 
-        // Reset selection state
-        this.selectedCells = []
-        this.permanentLines = []
-
-        // Update grid size
-        this.gridSize = this.gridSizeForDifficulty
-
-        // Save state after updating
-        this.saveState()
-
-        // Start new game if active
-        if (this.isGameActive) {
-          this.startNewGame()
+    loadSettings() {
+      const settings = loadSettings()
+      if (settings) {
+        this.appSettings = {
+          ...this.appSettings,
+          ...settings,
         }
       }
     },
 
-    setCategory(category) {
-      if (this.currentCategory !== category) {
-        console.log('Setting category to:', category)
-        this.currentCategory = category
-
-        // Save state after updating
-        this.saveState()
-
-        if (this.isGameActive) {
-          this.startNewGame()
-        }
-      }
+    setDarkMode(enabled) {
+      this.appSettings.darkMode = enabled
+      this.saveSettings()
     },
 
-    toggleSound() {
-      this.soundEnabled = !this.soundEnabled
-      this.saveState()
+    setVibration(enabled) {
+      this.appSettings.vibrationEnabled = enabled
+      this.saveSettings()
     },
 
-    toggleHints() {
-      this.hintsEnabled = !this.hintsEnabled
-      this.saveState()
+    setAutoSave(enabled) {
+      this.appSettings.autoSave = enabled
+      this.saveSettings()
     },
 
-    useHint() {
-      if (this.hintsEnabled && !this.gameComplete) {
-        // TODO: Implement hint logic
-        console.log('Hint used')
-      }
-    },
-
-    addScore(points) {
-      this.score += points
-    },
+    // Delegate methods for backward compatibility
+    setCategory: (category) => useGameStateStore().setCategory(category),
+    setDifficulty: (difficulty) => useGameStateStore().setDifficulty(difficulty),
+    updateGrid: (grid) => useGameStateStore().updateGrid(grid),
+    toggleSound: () => useGameStateStore().toggleSound(),
+    toggleHints: () => useGameStateStore().toggleHints(),
+    initChallengeMode: (cat, diff) => useChallengeModeStore().initChallenge(cat, diff),
+    exitChallengeMode: () => useChallengeModeStore().exitChallenge(),
 
     cleanup() {
-      this.isGameActive = false
-      this.stopTimer()
-      this.grid = []
-      this.words = []
-      this.foundWords = new Set()
-      this.selectedCells = []
-      this.permanentLines = []
-      this.saveState()
-    },
-
-    // Add method to update multipliers (for future use)
-    updateMultipliers(scoreMultiplier = null, chainMultiplier = null) {
-      if (scoreMultiplier !== null) {
-        this.scoreMultiplier = Number(scoreMultiplier) || 1
-      }
-      if (chainMultiplier !== null) {
-        this.chainMultiplier = Number(chainMultiplier) || 1
-      }
-    },
-
-    // Add method to set base word points (for future use)
-    setBaseWordPoints(points) {
-      this.baseWordPoints = Number(points) || 100
+      useGameStateStore().resetGameState()
+      useGameTimerStore().stopTimer()
+      useGameScoringStore().resetScore()
     },
   },
 })

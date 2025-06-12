@@ -14,6 +14,12 @@ const routes = [
         component: () => import('pages/GamePage.vue'),
       },
       {
+        path: 'challenge',
+        name: 'challenge',
+        component: () => import('pages/ChallengePage.vue'),
+        meta: { requiresActiveChallenge: true },
+      },
+      {
         path: 'stats',
         name: 'stats',
         component: () => import('pages/StatsPage.vue'),

@@ -45,10 +45,14 @@
       <div
         v-for="(letter, index) in flatGrid"
         :key="index"
-        class="grid-cell"
+        :class="[
+          'grid-cell',
+          {
+            selected: isCellSelected(index % gridSize, Math.floor(index / gridSize)),
+          },
+        ]"
         :data-x="index % gridSize"
         :data-y="Math.floor(index / gridSize)"
-        v-memo="[letter]"
       >
         {{ letter }}
       </div>
@@ -121,6 +125,16 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.grid-cell.selected {
+  background: var(--q-secondary, #26a69a) !important;
+  color: white !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 16px rgba(38, 166, 154, 0.6) !important;
+  z-index: 1;
+  position: relative;
+  border: 2px solid #ffffff !important;
+}
+
 .selection-overlay {
   position: absolute;
   top: 0;
@@ -145,7 +159,7 @@
   stroke-dasharray: 12;
   animation: dash 1s linear infinite;
   stroke: var(--q-secondary);
-  filter: drop-shadow(0 0 12px rgba(var(--q-secondary-rgb), 0.8));
+  filter: drop-shadow(0 0 12px rgba(38, 166, 154, 0.8));
 }
 
 .selection-line.permanent {
@@ -277,8 +291,11 @@ const props = defineProps({
 
 // Store and composables
 const gameStore = useGameStore()
-const { grid, gridSize } = useWordGrid()
+const { gridSize } = useWordGrid()
+// Use the game store grid directly to ensure consistency
+const grid = computed(() => gameStore.grid)
 const {
+  selectedCells,
   selectionLine,
   permanentLines,
   handleMouseDown,
@@ -350,6 +367,15 @@ const gridStyle = computed(() => ({
 
 // Flatten grid for better performance
 const flatGrid = computed(() => grid.value.flat())
+
+// Helper function to check if a cell is selected
+const isCellSelected = (x, y) => {
+  const isSelected = selectedCells.value.some((cell) => cell.x === x && cell.y === y)
+  if (isSelected && selectedCells.value.length > 0) {
+    console.log(`Cell (${x}, ${y}) is selected - total selected: ${selectedCells.value.length}`)
+  }
+  return isSelected
+}
 
 // Watch for game completion
 watch(
