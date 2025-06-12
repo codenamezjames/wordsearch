@@ -1,6 +1,10 @@
 .DS_Store
 .thumbs.db
 node_modules
+.todo
+.ai-todo
+.todo.md
+.ai-todo.md
 
 # Quasar core related directories
 .quasar
