@@ -160,8 +160,64 @@ export function useWordSelection() {
   }
 
   /**
-   * Update selection based on current cell
-   * @param {Coordinates} cell - Current cell coordinates
+   * Calculate the snapped endpoint in grid coordinates
+   * @returns {Coordinates|null} Snapped endpoint grid coordinates
+   */
+  const getSnappedEndpoint = () => {
+    if (!selectionStart.value || !selectionEnd.value) return null
+
+    const startCell = {
+      x: selectionStart.value.x,
+      y: selectionStart.value.y,
+    }
+
+    const currentCell = {
+      x: selectionEnd.value.x,
+      y: selectionEnd.value.y,
+    }
+
+    // Calculate direction vector
+    const dx = currentCell.x - startCell.x
+    const dy = currentCell.y - startCell.y
+
+    // If no movement, return start cell
+    if (dx === 0 && dy === 0) {
+      return startCell
+    }
+
+    // Determine the dominant direction and snap accordingly
+    const absDx = Math.abs(dx)
+    const absDy = Math.abs(dy)
+
+    let snappedEndCell
+
+    if (absDx === absDy) {
+      // Perfect diagonal - use current cell
+      snappedEndCell = currentCell
+    } else if (absDx > absDy) {
+      // Snap to horizontal
+      snappedEndCell = { x: currentCell.x, y: startCell.y }
+    } else {
+      // Snap to vertical
+      snappedEndCell = { x: startCell.x, y: currentCell.y }
+    }
+
+    // Validate the snapped endpoint is within grid bounds
+    if (
+      snappedEndCell.x >= 0 &&
+      snappedEndCell.x < gameStore.grid[0].length &&
+      snappedEndCell.y >= 0 &&
+      snappedEndCell.y < gameStore.grid.length
+    ) {
+      return snappedEndCell
+    }
+
+    return startCell
+  }
+
+  /**
+   * Update selection based on snapped line endpoint
+   * @param {Coordinates} cell - Current cell coordinates (for reference)
    */
   const updateSelection = (cell) => {
     if (!selectionStart.value || !gameStore.grid.length) return
@@ -171,23 +227,16 @@ export function useWordSelection() {
       y: selectionStart.value.y,
     }
 
-    // Validate cell coordinates are within grid bounds
-    if (
-      cell.x < 0 ||
-      cell.x >= gameStore.grid[0].length ||
-      cell.y < 0 ||
-      cell.y >= gameStore.grid.length ||
-      startCell.x < 0 ||
-      startCell.x >= gameStore.grid[0].length ||
-      startCell.y < 0 ||
-      startCell.y >= gameStore.grid.length
-    ) {
+    // Get the snapped endpoint instead of using the cursor position
+    const endCell = getSnappedEndpoint()
+    if (!endCell) {
+      selectedCells.value = [startCell]
       return
     }
 
-    // Calculate direction vector
-    const dx = cell.x - startCell.x
-    const dy = cell.y - startCell.y
+    // Calculate direction vector using snapped endpoint
+    const dx = endCell.x - startCell.x
+    const dy = endCell.y - startCell.y
 
     // If no movement, select just the start cell
     if (dx === 0 && dy === 0) {
@@ -229,13 +278,14 @@ export function useWordSelection() {
       return
     }
 
-    // Generate cells along the line
+    // Generate cells along the line using the snapped endpoint
     selectedCells.value = Array.from({ length: length + 1 }, (_, i) => ({
       x: startCell.x + Math.round(stepX * i),
       y: startCell.y + Math.round(stepY * i),
     }))
 
     console.log('Selection updated:', selectedCells.value.length, 'cells selected')
+    console.log('Snapped from cursor at:', cell, 'to endpoint:', endCell)
   }
 
   /**
@@ -256,7 +306,6 @@ export function useWordSelection() {
           cell.x < gameStore.grid[cell.y].length
         ) {
           const letter = gameStore.grid[cell.y][cell.x]
-          console.log(`Cell ${index}: (${cell.x}, ${cell.y}) = "${letter}"`)
           return letter
         }
         console.log(`Cell ${index}: (${cell.x}, ${cell.y}) = OUT OF BOUNDS`)
@@ -291,9 +340,7 @@ export function useWordSelection() {
   const handleSelectionEnd = () => {
     if (!isSelecting.value) return
 
-    console.log('Selection ended with cells:', selectedCells.value)
     const word = checkForWord()
-    console.log('Word check result:', word)
     if (word) {
       // Capture selected cells data before clearing
       const foundWordData = {

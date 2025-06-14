@@ -94,6 +94,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, watch, shallowRef, ref, nextTick } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useGameStateStore } from '../stores/gameState'
 import { useGameStats } from '../composables/useGameStats'
 import GameGrid from '../components/GameGrid.vue'
 import WordList from '../components/WordList.vue'
@@ -111,11 +112,28 @@ const showEndGame = shallowRef(false)
 const { progress, formattedScore } = useGameStats()
 const hintsAvailable = computed(() => gameStore.hintsEnabled && !gameStore.gameComplete)
 
-// Watch for game completion
+// Watch for game completion using the underlying gameState store directly
 watch(
-  () => gameStore.gameComplete,
+  () => {
+    const gameState = useGameStateStore()
+    return gameState.gameComplete
+  },
   (complete) => {
     if (complete && !gameStore.isChallengeMode) {
+      showEndGame.value = true
+    }
+  },
+  { flush: 'post' },
+)
+
+// Also watch for when all words are found as a backup
+watch(
+  () => {
+    const gameState = useGameStateStore()
+    return gameState.isGameComplete
+  },
+  (complete) => {
+    if (complete && !gameStore.isChallengeMode && !showEndGame.value) {
       showEndGame.value = true
     }
   },
@@ -131,9 +149,12 @@ const startGame = async () => {
 
   await nextTick()
 
-  if (!gameStore.currentCategory || !gameStore.difficulty) {
-    gameStore.setCategory('animals')
-    gameStore.setDifficulty('medium')
+  const gameState = useGameStateStore()
+  if (!gameState.currentCategory) {
+    gameState.currentCategory = 'animals'
+  }
+  if (!gameState.difficulty) {
+    gameState.difficulty = 'medium'
   }
 
   await nextTick()

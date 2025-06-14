@@ -105,7 +105,9 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useGameStore } from '../stores/game'
+import { useGameStateStore } from '../stores/gameState'
 import { useUserStore } from '../stores/user'
 import { useQuasar } from 'quasar'
 import { useTimeFormat } from '../composables/useTimeFormat'
@@ -121,6 +123,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'restart'])
 
 const $q = useQuasar()
+const router = useRouter()
 const gameStore = useGameStore()
 const userStore = useUserStore()
 
@@ -175,7 +178,10 @@ const restartGame = () => {
 
 const exitToMenu = () => {
   showModal.value = false
-  gameStore.isGameActive = false
+  const gameState = useGameStateStore()
+  gameState.isGameActive = false
+  gameStore.cleanup()
+  router.push({ name: 'start' })
 }
 
 const shareResult = () => {

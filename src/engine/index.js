@@ -11,8 +11,5 @@ export { TimeSlowModifier } from './modifiers/TimeSlowModifier.js'
 import { GameEngine } from './GameEngine.js'
 export const gameEngine = new GameEngine()
 
-// Initialize the engine when imported
-if (typeof window !== 'undefined') {
-  // Only initialize in browser environment
-  gameEngine.initialize()
-}
+// Note: The engine must be manually initialized after Pinia is ready
+// Call gameEngine.initialize() in your application after Pinia setup

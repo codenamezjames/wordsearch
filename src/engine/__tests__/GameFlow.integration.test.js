@@ -88,7 +88,7 @@ vi.mock('../../stores/categories.js', () => ({
 }))
 
 describe('Game Flow Integration', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
 
     // Reset mock store states
@@ -102,7 +102,7 @@ describe('Game Flow Integration', () => {
 
     // Create a new engine instance
     gameEngine = new GameEngine()
-    gameEngine.initialize()
+    await gameEngine.initialize()
 
     // Create a score doubler modifier
     scoreDoubleModifier = new BaseModifier({
@@ -151,7 +151,7 @@ describe('Game Flow Integration', () => {
 
       // 3. Activate a modifier
       await scoreDoubleModifier.activate()
-      gameEngine.registerModifier(scoreDoubleModifier)
+      await gameEngine.registerModifier(scoreDoubleModifier)
 
       // 4. Find another word with modifier active
       await gameEngine.foundWord('dog')
@@ -261,11 +261,11 @@ describe('Game Flow Integration', () => {
       await gameEngine.startGame()
 
       // Pause the game
-      gameEngine.pauseGame()
+      await gameEngine.pauseGame()
       expect(mockStores.timer.stopTimer).toHaveBeenCalled()
 
       // Resume the game
-      gameEngine.resumeGame()
+      await gameEngine.resumeGame()
       expect(mockStores.timer.startTimer).toHaveBeenCalled()
     })
   })
@@ -286,8 +286,8 @@ describe('Game Flow Integration', () => {
       // Activate and register both modifiers
       await scoreDoubleModifier.activate()
       await bonusModifier.activate()
-      gameEngine.registerModifier(scoreDoubleModifier)
-      gameEngine.registerModifier(bonusModifier)
+      await gameEngine.registerModifier(scoreDoubleModifier)
+      await gameEngine.registerModifier(bonusModifier)
 
       await gameEngine.startGame()
 
@@ -312,7 +312,7 @@ describe('Game Flow Integration', () => {
 
       // Activate and register the modifier
       await tempModifier.activate()
-      gameEngine.registerModifier(tempModifier)
+      await gameEngine.registerModifier(tempModifier)
 
       await gameEngine.startGame()
 

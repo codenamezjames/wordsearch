@@ -371,9 +371,6 @@ const flatGrid = computed(() => grid.value.flat())
 // Helper function to check if a cell is selected
 const isCellSelected = (x, y) => {
   const isSelected = selectedCells.value.some((cell) => cell.x === x && cell.y === y)
-  if (isSelected && selectedCells.value.length > 0) {
-    console.log(`Cell (${x}, ${y}) is selected - total selected: ${selectedCells.value.length}`)
-  }
   return isSelected
 }
 
@@ -422,7 +419,7 @@ watch(
         createFloatingText(wordData.word, x, y)
 
         // Clear the data after using it
-        gameStore.lastFoundWordData = null
+        gameStore.clearLastFoundWordData()
       } else {
         console.warn('Could not find center element for animation')
       }

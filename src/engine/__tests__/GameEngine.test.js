@@ -98,10 +98,10 @@ describe('GameEngine', () => {
       expect(gameEngine.eventBus).toBeDefined()
     })
 
-    it('should initialize stores correctly', () => {
+    it('should initialize stores correctly', async () => {
       const emitSpy = vi.spyOn(gameEngine.eventBus, 'emit')
 
-      gameEngine.initialize()
+      await gameEngine.initialize()
 
       expect(gameEngine.isInitialized).toBe(true)
       expect(gameEngine.stores.gameState).toBe(mockGameStateStore)
@@ -112,19 +112,19 @@ describe('GameEngine', () => {
       expect(emitSpy).toHaveBeenCalledWith('engine:initialized')
     })
 
-    it('should not re-initialize if already initialized', () => {
-      gameEngine.initialize()
+    it('should not re-initialize if already initialized', async () => {
+      await gameEngine.initialize()
       const emitSpy = vi.spyOn(gameEngine.eventBus, 'emit')
 
-      gameEngine.initialize()
+      await gameEngine.initialize()
 
       expect(emitSpy).not.toHaveBeenCalled()
     })
   })
 
   describe('Game lifecycle', () => {
-    beforeEach(() => {
-      gameEngine.initialize()
+    beforeEach(async () => {
+      await gameEngine.initialize()
     })
 
     it('should start a new game with default options', async () => {
@@ -228,26 +228,26 @@ describe('GameEngine', () => {
   })
 
   describe('Game control', () => {
-    beforeEach(() => {
-      gameEngine.initialize()
+    beforeEach(async () => {
+      await gameEngine.initialize()
     })
 
-    it('should pause the game', () => {
-      gameEngine.pauseGame()
+    it('should pause the game', async () => {
+      await gameEngine.pauseGame()
 
       expect(mockGameTimerStore.stopTimer).toHaveBeenCalled()
     })
 
-    it('should resume the game', () => {
-      gameEngine.resumeGame()
+    it('should resume the game', async () => {
+      await gameEngine.resumeGame()
 
       expect(mockGameTimerStore.startTimer).toHaveBeenCalled()
     })
 
-    it('should end the game', () => {
+    it('should end the game', async () => {
       const emitSpy = vi.spyOn(gameEngine.eventBus, 'emit')
 
-      gameEngine.endGame()
+      await gameEngine.endGame()
 
       expect(mockGameStateStore.isGameActive).toBe(false)
       expect(mockGameTimerStore.stopTimer).toHaveBeenCalled()
@@ -270,8 +270,8 @@ describe('GameEngine', () => {
   describe('Modifier system', () => {
     let testModifier
 
-    beforeEach(() => {
-      gameEngine.initialize()
+    beforeEach(async () => {
+      await gameEngine.initialize()
 
       // Create a test modifier
       testModifier = new BaseModifier({
@@ -280,18 +280,18 @@ describe('GameEngine', () => {
       })
     })
 
-    it('should register modifiers', () => {
+    it('should register modifiers', async () => {
       const setEngineSpy = vi.spyOn(testModifier, 'setEngine')
 
-      gameEngine.registerModifier(testModifier)
+      await gameEngine.registerModifier(testModifier)
 
       expect(gameEngine.modifiers.has('TestModifier')).toBe(true)
       expect(setEngineSpy).toHaveBeenCalledWith(gameEngine)
     })
 
-    it('should unregister modifiers', () => {
-      gameEngine.registerModifier(testModifier)
-      gameEngine.unregisterModifier(testModifier)
+    it('should unregister modifiers', async () => {
+      await gameEngine.registerModifier(testModifier)
+      await gameEngine.unregisterModifier(testModifier)
 
       expect(gameEngine.modifiers.has('TestModifier')).toBe(false)
     })
@@ -302,7 +302,7 @@ describe('GameEngine', () => {
         .mockImplementation(async (type, value) => value * 2)
 
       await testModifier.activate()
-      gameEngine.registerModifier(testModifier)
+      await gameEngine.registerModifier(testModifier)
 
       const result = await gameEngine.applyModifiers('score', 100)
 
@@ -330,8 +330,8 @@ describe('GameEngine', () => {
       await modifier1.activate()
       await modifier2.activate()
 
-      gameEngine.registerModifier(modifier1)
-      gameEngine.registerModifier(modifier2)
+      await gameEngine.registerModifier(modifier1)
+      await gameEngine.registerModifier(modifier2)
 
       // Higher priority (modifier1) should be applied first: (100 * 2) + 50 = 250
       const result = await gameEngine.applyModifiers('score', 100)
@@ -341,8 +341,8 @@ describe('GameEngine', () => {
   })
 
   describe('Event delegation', () => {
-    beforeEach(() => {
-      gameEngine.initialize()
+    beforeEach(async () => {
+      await gameEngine.initialize()
     })
 
     it('should delegate on() to eventBus', () => {
@@ -373,8 +373,8 @@ describe('GameEngine', () => {
   })
 
   describe('Error handling', () => {
-    beforeEach(() => {
-      gameEngine.initialize()
+    beforeEach(async () => {
+      await gameEngine.initialize()
     })
 
     it('should throw if methods are called before initialization', () => {
@@ -395,12 +395,12 @@ describe('GameEngine', () => {
   })
 
   describe('Game state access', () => {
-    beforeEach(() => {
-      gameEngine.initialize()
+    beforeEach(async () => {
+      await gameEngine.initialize()
     })
 
-    it('should provide game state snapshot', () => {
-      const state = gameEngine.getGameState()
+    it('should provide game state snapshot', async () => {
+      const state = await gameEngine.getGameState()
 
       expect(state.isActive).toBe(mockGameStateStore.isGameActive)
       expect(state.category).toBe(mockGameStateStore.currentCategory)

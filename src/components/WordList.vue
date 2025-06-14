@@ -22,15 +22,15 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useGameStore } from '../stores/game'
+import { useGameStateStore } from '../stores/gameState'
 
-const gameStore = useGameStore()
+const gameStateStore = useGameStateStore()
 
-// Computed properties from game store
-const words = computed(() => gameStore.words)
+// Computed properties from game state store
+const words = computed(() => gameStateStore.words)
 
 // Check if a word has been found
-const isWordFound = (word) => gameStore.foundWords.has(word)
+const isWordFound = (word) => gameStateStore.foundWords.has(word)
 </script>
 
 <style scoped>

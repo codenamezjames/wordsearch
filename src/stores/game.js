@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { debounce } from 'quasar'
 import { useGameStateStore } from './gameState'
 import { useGameTimerStore } from './gameTimer'
 import { useGameScoringStore } from './gameScoring'
@@ -16,6 +17,8 @@ export const useGameStore = defineStore('game', {
     },
     // Flag to track if stores have been initialized
     initialized: false,
+    // Flag to prevent recursive startNewGame calls
+    startingNewGame: false,
   }),
 
   getters: {
@@ -85,10 +88,9 @@ export const useGameStore = defineStore('game', {
     },
 
     /**
-     * Start a new game
+     * Start a new game (debounced to prevent multiple rapid calls)
      */
-    startNewGame() {
-      // Ensure stores are initialized
+    startNewGame: debounce(function () {
       this.initialize()
 
       const gameState = useGameStateStore()
@@ -96,27 +98,23 @@ export const useGameStore = defineStore('game', {
       const scoring = useGameScoringStore()
       const categories = useCategoriesStore()
 
-      // Reset all stores
       gameState.resetGameState()
       timer.resetTimer()
       scoring.resetScore()
 
-      // Get words for category
       const selectedWords = categories.getRandomWords(
         gameState.currentCategory,
         gameState.wordCountForDifficulty,
       )
 
       if (!selectedWords || selectedWords.length === 0) {
-        console.error('Failed to get words for category:', gameState.currentCategory)
         return
       }
 
-      // Set up new game
       gameState.words = selectedWords
       gameState.isGameActive = true
       timer.startTimer()
-    },
+    }, 300),
 
     /**
      * Add a found word and calculate score
@@ -187,12 +185,34 @@ export const useGameStore = defineStore('game', {
     },
 
     // Delegate methods for backward compatibility
-    setCategory: (category) => useGameStateStore().setCategory(category),
-    setDifficulty: (difficulty) => useGameStateStore().setDifficulty(difficulty),
+    setCategory: (category) => {
+      const wasGameActive = useGameStateStore().setCategory(category)
+      // If the game was active when category changed, start a new game
+      if (wasGameActive) {
+        useGameStore().startNewGame()
+      }
+    },
+    setDifficulty: (difficulty) => {
+      const wasGameActive = useGameStateStore().setDifficulty(difficulty)
+      // If the game was active when difficulty changed, start a new game
+      if (wasGameActive) {
+        useGameStore().startNewGame()
+      }
+    },
     updateGrid: (grid) => useGameStateStore().updateGrid(grid),
+    updateWords: (words) => useGameStateStore().updateWords(words),
+    clearLastFoundWordData: () => (useGameStateStore().lastFoundWordData = null),
     toggleSound: () => useGameStateStore().toggleSound(),
     toggleHints: () => useGameStateStore().toggleHints(),
     initChallengeMode: (cat, diff) => useChallengeModeStore().initChallenge(cat, diff),
+    nextChallengeRound() {
+      const challengeMode = useChallengeModeStore()
+      if (!challengeMode.isActive || challengeMode.completed) return
+
+      challengeMode.nextRound()
+      // Start a new game for the next round
+      useGameStore().startNewGame()
+    },
     exitChallengeMode: () => useChallengeModeStore().exitChallenge(),
 
     cleanup() {

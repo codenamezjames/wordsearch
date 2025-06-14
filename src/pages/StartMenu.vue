@@ -72,8 +72,8 @@
 
         <!-- Action Buttons -->
         <div class="action-section">
-          <div class="row q-col-gutter-md q-mt-lg">
-            <div class="col-6">
+          <div class="row q-col-gutter-md q-mt-lg justify-center">
+            <div class="col-sm-6">
               <q-btn
                 class="start-button"
                 :class="{ ready: canStartGame }"
@@ -89,12 +89,12 @@
                 <div class="button-glow"></div>
               </q-btn>
             </div>
-            <div class="col-6">
+            <div class="col-sm-6">
               <q-btn
                 class="start-button challenge-button"
                 :class="{ ready: canStartGame }"
                 :disable="!canStartGame"
-                @click="showChallengeDialog = true"
+                @click="startChallengeMode"
                 size="lg"
                 color="secondary"
                 no-caps
@@ -128,53 +128,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Challenge Mode Dialog -->
-    <q-dialog v-model="showChallengeDialog">
-      <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">Challenge Mode Setup</div>
-          <div class="text-caption q-mt-sm">Complete 10 rounds and reach the target score!</div>
-        </q-card-section>
-
-        <q-card-section>
-          <div class="q-mb-md">
-            <div class="text-subtitle2 q-mb-sm">Difficulty</div>
-            <div class="text-caption text-grey-7 q-mb-sm">
-              Target Score: {{ getChallengeTarget(tempDifficulty).toLocaleString() }} points
-            </div>
-            <q-btn-toggle
-              v-model="tempDifficulty"
-              spread
-              class="full-width"
-              toggle-color="primary"
-              :options="[
-                { label: 'Baby', value: 'baby' },
-                { label: 'Easy', value: 'easy' },
-                { label: 'Medium', value: 'medium' },
-                { label: 'Hard', value: 'hard' },
-              ]"
-            />
-          </div>
-
-          <div>
-            <div class="text-subtitle2 q-mb-sm">Category</div>
-            <q-select
-              v-model="tempCategory"
-              :options="categoryOptions"
-              filled
-              emit-value
-              map-options
-            />
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup />
-          <q-btn color="primary" label="Start Challenge" @click="startChallengeMode" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
 
     <!-- Settings Dialog (if needed) -->
     <q-dialog v-model="showSettings">
@@ -219,10 +172,7 @@ const gameStore = useGameStore()
 const categoriesStore = useCategoriesStore()
 const showSettings = ref(false)
 
-// Challenge Mode refs
-const showChallengeDialog = ref(false)
-const tempDifficulty = ref('medium')
-const tempCategory = ref('animals')
+// Challenge Mode refs (removed - no longer needed)
 
 // Settings
 const soundEnabled = computed(() => gameStore.soundEnabled)
@@ -316,13 +266,7 @@ const selectedCategory = computed(() => gameStore.currentCategory)
 const selectedDifficulty = computed(() => gameStore.difficulty)
 const canStartGame = computed(() => selectedCategory.value && selectedDifficulty.value)
 
-// Challenge Mode computed
-const categoryOptions = computed(() =>
-  categoriesStore.categoryNames.map((name) => ({
-    label: name.charAt(0).toUpperCase() + name.slice(1),
-    value: name,
-  })),
-)
+// Challenge Mode computed (removed - no longer needed)
 
 // Actions
 const selectCategory = (category) => {
@@ -333,16 +277,7 @@ const selectDifficulty = (difficulty) => {
   gameStore.setDifficulty(difficulty)
 }
 
-// Challenge Mode methods
-const getChallengeTarget = (difficulty) => {
-  const targets = {
-    baby: 3000,
-    easy: 5000,
-    medium: 10000,
-    hard: 15000,
-  }
-  return targets[difficulty] || 10000
-}
+// Challenge Mode methods (removed - no longer needed)
 
 const startSingleGame = () => {
   gameStore.challengeMode.isActive = false
@@ -351,8 +286,8 @@ const startSingleGame = () => {
 }
 
 const startChallengeMode = () => {
-  showChallengeDialog.value = false
-  gameStore.initChallengeMode(tempCategory.value, tempDifficulty.value)
+  // Use the currently selected category and difficulty from the main menu
+  gameStore.initChallengeMode(selectedCategory.value, selectedDifficulty.value)
   gameStore.startNewGame()
   router.push({ name: 'challenge' })
 }
@@ -372,7 +307,8 @@ onMounted(() => {
   }))
 
   // Select random theme by default
-  selectCategory('random')
+  const randomCategory = categoriesStore.getRandomCategory()
+  selectCategory(randomCategory)
 })
 </script>
 
@@ -520,9 +456,33 @@ onMounted(() => {
 }
 
 .category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1.5rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  }
 }
 
 .category-card {
@@ -535,6 +495,8 @@ onMounted(() => {
   transition: all 0.3s ease;
   overflow: hidden;
   text-align: center;
+  flex: 0 0 130px;
+  min-width: 130px;
 
   &:hover {
     transform: translateY(-4px);
@@ -748,9 +710,44 @@ onMounted(() => {
     border-radius: 16px;
   }
 
-  .category-grid,
+  .category-card {
+    flex: 0 0 120px;
+    min-width: 120px;
+  }
+
   .difficulty-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 1.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+
+  .difficulty-card {
+    flex: 0 0 120px;
+    min-width: 120px;
   }
 
   .secondary-actions {

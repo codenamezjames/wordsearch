@@ -56,22 +56,53 @@ export const useGameStateStore = defineStore('gameState', {
 
   actions: {
     setCategory(category) {
-      this.currentCategory = category
-      this.saveState()
+      if (this.currentCategory !== category) {
+        const wasGameActive = this.isGameActive
+
+        this.currentCategory = category
+
+        // If game was active, reset it completely
+        if (wasGameActive) {
+          this.resetGameState()
+        }
+
+        this.saveState()
+
+        // Return whether the game was active so the caller can restart it
+        return wasGameActive
+      }
+      return false
     },
 
     setDifficulty(difficulty) {
       if (this.difficulty !== difficulty) {
+        const wasGameActive = this.isGameActive
+
         this.difficulty = difficulty
         this.selectedCells = []
         this.permanentLines = []
         this.gridSize = this.gridSizeForDifficulty
+
+        // If game was active, reset it completely
+        if (wasGameActive) {
+          this.resetGameState()
+        }
+
         this.saveState()
+
+        // Return whether the game was active so the caller can restart it
+        return wasGameActive
       }
+      return false
     },
 
     updateGrid(newGrid) {
       this.grid = newGrid
+      this.saveState()
+    },
+
+    updateWords(newWords) {
+      this.words = newWords
       this.saveState()
     },
 
@@ -122,21 +153,23 @@ export const useGameStateStore = defineStore('gameState', {
       const savedState = loadGameState()
 
       if (savedState) {
-        // Restore state from storage
         this.$patch({
           grid: savedState.grid || this.grid,
-          gridSize: savedState.gridSize || this.gridSize,
-          isGameActive: savedState.isGameActive || false,
-          gameComplete: savedState.gameComplete || false,
+          isGameActive: false,
+          gameComplete: false,
           currentCategory: savedState.currentCategory || 'animals',
           difficulty: savedState.difficulty || 'medium',
-          words: savedState.words || [],
-          foundWords: savedState.foundWords || new Set(),
+          words: [],
+          foundWords: new Set(),
           selectedCells: savedState.selectedCells || [],
           permanentLines: savedState.permanentLines || [],
           soundEnabled: savedState.soundEnabled !== undefined ? savedState.soundEnabled : true,
           hintsEnabled: savedState.hintsEnabled || false,
+          lastFoundWordData: null,
         })
+
+        // Update gridSize based on the loaded difficulty
+        this.gridSize = this.gridSizeForDifficulty
       }
     },
   },

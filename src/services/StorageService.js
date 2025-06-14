@@ -240,11 +240,11 @@ export class StorageService {
         default:
           return value
       }
-    } catch (_error) {
+    } catch {
       // For backwards compatibility with old format
       try {
         return JSON.parse(serialized)
-      } catch (_e) {
+      } catch {
         return serialized
       }
     }

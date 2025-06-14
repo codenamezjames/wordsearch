@@ -1,9 +1,5 @@
 import { EventBus } from './EventBus.js'
-import { useGameStateStore } from '../stores/gameState.js'
-import { useGameTimerStore } from '../stores/gameTimer.js'
-import { useGameScoringStore } from '../stores/gameScoring.js'
-import { useChallengeModeStore } from '../stores/challengeMode.js'
-import { useCategoriesStore } from '../stores/categories.js'
+// Store imports are now lazy-loaded to avoid Pinia initialization issues
 
 /**
  * GameEngine - Central orchestrator for all game logic
@@ -30,8 +26,15 @@ export class GameEngine {
    * Initialize the game engine with store instances
    * Must be called before using the engine
    */
-  initialize() {
+  async initialize() {
     if (this.isInitialized) return
+
+    // Dynamically import store functions to avoid Pinia initialization issues
+    const { useGameStateStore } = await import('../stores/gameState.js')
+    const { useGameTimerStore } = await import('../stores/gameTimer.js')
+    const { useGameScoringStore } = await import('../stores/gameScoring.js')
+    const { useChallengeModeStore } = await import('../stores/challengeMode.js')
+    const { useCategoriesStore } = await import('../stores/categories.js')
 
     // Initialize store references
     this.stores.gameState = useGameStateStore()
@@ -52,7 +55,7 @@ export class GameEngine {
    * @param {boolean} options.challengeMode - Whether to start in challenge mode
    */
   async startGame(options = {}) {
-    this.ensureInitialized()
+    await this.ensureInitialized()
 
     const { category, difficulty, challengeMode = false } = options
 
@@ -113,7 +116,7 @@ export class GameEngine {
    * @param {Object} wordData - Additional word data (position, etc.)
    */
   async foundWord(word, wordData = null) {
-    this.ensureInitialized()
+    await this.ensureInitialized()
 
     if (!this.stores.gameState.isGameActive) return false
 
@@ -161,7 +164,7 @@ export class GameEngine {
    * Handle game completion
    */
   async handleGameComplete() {
-    this.ensureInitialized()
+    await this.ensureInitialized()
 
     this.stores.gameState.isGameActive = false
     this.stores.gameState.gameComplete = true
@@ -204,8 +207,8 @@ export class GameEngine {
    * Register a modifier with the engine
    * @param {BaseModifier} modifier - The modifier to register
    */
-  registerModifier(modifier) {
-    this.ensureInitialized()
+  async registerModifier(modifier) {
+    await this.ensureInitialized()
 
     if (!modifier.config?.name) {
       throw new Error('Modifier must have a name')
@@ -224,8 +227,8 @@ export class GameEngine {
    * Unregister a modifier
    * @param {string|BaseModifier} modifier - Modifier name or instance
    */
-  unregisterModifier(modifier) {
-    this.ensureInitialized()
+  async unregisterModifier(modifier) {
+    await this.ensureInitialized()
 
     const name = typeof modifier === 'string' ? modifier : modifier.config?.name
 
@@ -264,8 +267,8 @@ export class GameEngine {
   /**
    * Get current game state
    */
-  getGameState() {
-    this.ensureInitialized()
+  async getGameState() {
+    await this.ensureInitialized()
 
     return {
       isActive: this.stores.gameState.isGameActive,
@@ -285,8 +288,8 @@ export class GameEngine {
   /**
    * Pause the game
    */
-  pauseGame() {
-    this.ensureInitialized()
+  async pauseGame() {
+    await this.ensureInitialized()
 
     if (this.stores.gameState.isGameActive && this.stores.timer.isRunning) {
       this.stores.timer.stopTimer()
@@ -297,8 +300,8 @@ export class GameEngine {
   /**
    * Resume the game
    */
-  resumeGame() {
-    this.ensureInitialized()
+  async resumeGame() {
+    await this.ensureInitialized()
 
     if (this.stores.gameState.isGameActive && !this.stores.timer.isRunning) {
       this.stores.timer.startTimer()
@@ -309,8 +312,8 @@ export class GameEngine {
   /**
    * End the current game
    */
-  endGame() {
-    this.ensureInitialized()
+  async endGame() {
+    await this.ensureInitialized()
 
     this.stores.gameState.isGameActive = false
     this.stores.timer.stopTimer()
@@ -355,9 +358,9 @@ export class GameEngine {
   /**
    * Ensure engine is initialized
    */
-  ensureInitialized() {
+  async ensureInitialized() {
     if (!this.isInitialized) {
-      throw new Error('GameEngine must be initialized before use')
+      await this.initialize()
     }
   }
 }

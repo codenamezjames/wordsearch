@@ -67,10 +67,10 @@ describe('Performance Tests', () => {
   let gameEngine
   let eventBus
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.useFakeTimers()
     gameEngine = new GameEngine()
-    gameEngine.initialize()
+    await gameEngine.initialize()
     eventBus = new EventBus()
   })
 
@@ -141,7 +141,7 @@ describe('Performance Tests', () => {
         )
 
         await modifier.activate()
-        gameEngine.registerModifier(modifier)
+        await gameEngine.registerModifier(modifier)
       }
 
       const start = performance.now()

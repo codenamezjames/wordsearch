@@ -52,10 +52,10 @@
 
     <!-- Main Game Content -->
     <div class="col-grow column no-wrap">
-      <TopBar class="q-mb-md" />
+      <TopBar class="q-mb-md" :show-settings="showSettings" />
 
       <!-- Desktop Layout -->
-      <div class="col-grow row q-gutter-md no-wrap gt-xs">
+      <div v-if="$q.screen.gt.xs" class="col-grow row q-gutter-md no-wrap">
         <div class="col-grow flex flex-center">
           <GameGrid />
         </div>
@@ -68,7 +68,7 @@
       </div>
 
       <!-- Mobile Layout -->
-      <div class="col-grow column no-wrap xs">
+      <div v-else class="col-grow column no-wrap">
         <div class="col-grow flex flex-center full-height">
           <GameGrid />
         </div>
@@ -96,6 +96,9 @@
       @play-again="handlePlayAgain"
       @exit="handleExitChallenge"
     />
+
+    <!-- Settings Panel -->
+    <SettingsPanel v-model="showSettings" />
   </div>
 </template>
 
@@ -110,6 +113,7 @@ import WordList from '../components/WordList.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import RoundTransitionModal from '../components/RoundTransitionModal.vue'
 import ChallengeCompleteModal from '../components/ChallengeCompleteModal.vue'
+import SettingsPanel from '../components/SettingsPanel.vue'
 
 const router = useRouter()
 const gameStore = useGameStore()
@@ -118,6 +122,7 @@ const $q = useQuasar()
 // Refs
 const showRoundTransition = ref(false)
 const showChallengeComplete = ref(false)
+const showSettings = ref(false)
 
 // Computed
 const challengeProgress = computed(() => gameStore.challengeProgress || 0)
