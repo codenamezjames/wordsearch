@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showModal" persistent transition-show="scale" transition-hide="scale">
-    <q-card class="round-transition-modal">
+    <q-card class="round-transition-modal" data-test="round-transition-modal">
       <q-card-section class="text-center">
         <q-icon name="emoji_events" size="3rem" color="positive" />
         <div class="text-h5 q-mt-md">Round Complete!</div>

@@ -102,6 +102,7 @@
                 color="secondary"
                 no-caps
                 unelevated
+                data-test="start-challenge-button"
               >
                 <q-icon name="emoji_events" class="start-icon" />
                 <span>Challenge Mode</span>

@@ -17,7 +17,8 @@
     "build": "quasar build",
     "postinstall": "quasar prepare",
     "e2e": "cypress run",
-    "e2e:open": "cypress open"
+    "e2e:open": "cypress open",
+    "e2e:challenge": "cypress run --spec 'cypress/e2e/challenge.cy.js'"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",

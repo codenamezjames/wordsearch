@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="showModal" persistent transition-show="scale" transition-hide="scale">
-    <q-card class="challenge-complete-modal">
+    <q-card class="challenge-complete-modal" data-test="challenge-complete-modal">
       <!-- Confetti for success -->
       <div v-if="isSuccess && showConfetti" ref="confettiContainer" class="confetti-container" />
 

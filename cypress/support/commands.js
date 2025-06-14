@@ -5,10 +5,10 @@ Cypress.Commands.add('selectWord', (startCell, endCell) => {
   cy.get(`[data-test="grid-cell-${startCell}"]`).as('startCell')
   cy.get(`[data-test="grid-cell-${endCell}"]`).as('endCell')
 
-  // Simulate mouse drag from start to end
-  cy.get('@startCell').trigger('mousedown', { button: 0, which: 1 })
-  cy.get('@endCell').trigger('mousemove')
-  cy.get('@endCell').trigger('mouseup')
+  // Simulate mouse drag from start to end (with force to handle overlapping elements)
+  cy.get('@startCell').trigger('mousedown', { button: 0, which: 1, force: true })
+  cy.get('@endCell').trigger('mousemove', { force: true })
+  cy.get('@endCell').trigger('mouseup', { force: true })
 
   // Small delay to allow for processing
   cy.wait(100)
