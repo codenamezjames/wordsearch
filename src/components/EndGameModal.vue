@@ -1,6 +1,11 @@
 <!-- EndGameModal.vue - Victory/game over modal -->
 <template>
-  <q-dialog v-model="showModal" transition-show="scale" transition-hide="scale">
+  <q-dialog
+    v-model="showModal"
+    transition-show="scale"
+    transition-hide="scale"
+    data-test="end-game-modal"
+  >
     <q-card class="end-game-modal">
       <!-- Confetti overlay (only shown on victory) -->
       <div v-if="isVictory && showConfetti" ref="confettiContainer" class="confetti-container" />

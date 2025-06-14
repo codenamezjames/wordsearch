@@ -7,6 +7,7 @@
         :key="word"
         :class="{ found: isWordFound(word), pending: !isWordFound(word) }"
         class="word-chip"
+        :data-test="`word-item-${word}`"
       >
         <span class="word-text">{{ word }}</span>
         <q-icon v-if="isWordFound(word)" name="check_circle" class="word-icon found-icon" />

@@ -53,6 +53,7 @@
         ]"
         :data-x="index % gridSize"
         :data-y="Math.floor(index / gridSize)"
+        :data-test="`grid-cell-${Math.floor(index / gridSize)}-${index % gridSize}`"
       >
         {{ letter }}
       </div>

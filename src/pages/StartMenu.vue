@@ -29,6 +29,7 @@
               class="category-card"
               :class="{ active: selectedCategory === category.id }"
               @click="selectCategory(category.id)"
+              :data-test="`category-${category.id}`"
             >
               <div class="category-icon">
                 <q-icon :name="category.icon" />
@@ -53,6 +54,7 @@
               class="difficulty-card"
               :class="{ active: selectedDifficulty === diff.id }"
               @click="selectDifficulty(diff.id)"
+              :data-test="`difficulty-${diff.id}`"
             >
               <div class="difficulty-level">{{ diff.name }}</div>
               <div class="difficulty-details">
@@ -83,6 +85,7 @@
                 color="primary"
                 no-caps
                 unelevated
+                data-test="start-game-button"
               >
                 <q-icon name="grid_on" class="start-icon" />
                 <span>Single Board</span>
