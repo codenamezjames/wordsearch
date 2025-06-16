@@ -1,0 +1,1 @@
+import{aY as o,r as i,w as u}from"./index-BGe7OyI9.js";import{u as c}from"./use-quasar-BT7GoY2C.js";const k=o("theme",()=>{const e=c(),r=i(e.dark.isActive);u(()=>e.dark.isActive,t=>{r.value=t});function a(){e.dark.toggle(),r.value=e.dark.isActive}function s(t){e.dark.set(t),r.value=t}return{isDark:r,toggleDarkMode:a,setDarkMode:s}});export{k as u};
