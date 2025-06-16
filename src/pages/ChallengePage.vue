@@ -132,8 +132,22 @@ watch(
   () => gameStore.gameComplete,
   (newVal) => {
     if (newVal && gameStore.isChallengeMode) {
+      console.log('Game completed in challenge mode:', {
+        currentRound: gameStore.challengeMode.currentRound,
+        totalRounds: gameStore.challengeMode.totalRounds,
+        completed: gameStore.challengeMode.completed,
+        cumulativeScore: gameStore.challengeMode.cumulativeScore,
+        targetScore: gameStore.challengeMode.targetScore,
+      })
+
       // Delay to allow final animations
       setTimeout(() => {
+        console.log('After timeout - showing modal:', {
+          completed: gameStore.challengeMode.completed,
+          willShowCompletion: gameStore.challengeMode.completed,
+          willShowTransition: !gameStore.challengeMode.completed,
+        })
+
         if (gameStore.challengeMode.completed) {
           showChallengeComplete.value = true
         } else {

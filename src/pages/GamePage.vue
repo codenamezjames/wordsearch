@@ -119,7 +119,16 @@ watch(
     return gameState.gameComplete
   },
   (complete) => {
+    console.log('GamePage: Game completion changed:', {
+      complete,
+      isChallengeMode: gameStore.isChallengeMode,
+      showEndGame: showEndGame.value,
+      foundWords: gameStore.foundWordsCount,
+      totalWords: gameStore.totalWords,
+    })
+
     if (complete && !gameStore.isChallengeMode) {
+      console.log('GamePage: Showing end game modal')
       showEndGame.value = true
     }
   },
@@ -133,7 +142,16 @@ watch(
     return gameState.isGameComplete
   },
   (complete) => {
+    console.log('GamePage: isGameComplete changed:', {
+      complete,
+      isChallengeMode: gameStore.isChallengeMode,
+      showEndGame: showEndGame.value,
+      foundWords: gameStore.foundWordsCount,
+      totalWords: gameStore.totalWords,
+    })
+
     if (complete && !gameStore.isChallengeMode && !showEndGame.value) {
+      console.log('GamePage: Showing end game modal (backup watch)')
       showEndGame.value = true
     }
   },
@@ -155,6 +173,18 @@ const startGame = async () => {
   }
   if (!gameState.difficulty) {
     gameState.difficulty = 'medium'
+  }
+
+  console.log('GamePage: Starting single-player game:', {
+    isChallengeMode: gameStore.isChallengeMode,
+    challengeModeActive: gameStore.challengeMode.isActive,
+    challengeModeState: gameStore.challengeMode,
+  })
+
+  // Ensure challenge mode is disabled for single-player games
+  if (gameStore.isChallengeMode) {
+    console.log('GamePage: Challenge mode was active, exiting it for single-player game')
+    gameStore.exitChallengeMode()
   }
 
   await nextTick()

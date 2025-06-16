@@ -1,9 +1,6 @@
 <template>
   <q-dialog v-model="showModal" persistent transition-show="scale" transition-hide="scale">
     <q-card class="challenge-complete-modal" data-test="challenge-complete-modal">
-      <!-- Confetti for success -->
-      <div v-if="isSuccess && showConfetti" ref="confettiContainer" class="confetti-container" />
-
       <q-card-section class="text-center">
         <q-icon
           :name="isSuccess ? 'emoji_events' : 'sentiment_dissatisfied'"
@@ -105,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useQuasar } from 'quasar'
 
@@ -120,9 +117,6 @@ const emit = defineEmits(['update:modelValue', 'play-again', 'exit'])
 
 const gameStore = useGameStore()
 const $q = useQuasar()
-
-const confettiContainer = ref(null)
-const showConfetti = ref(false)
 
 const showModal = computed({
   get: () => props.modelValue,
@@ -195,40 +189,12 @@ const copyToClipboard = (text) => {
     })
   })
 }
-
-// Trigger confetti on success
-const triggerConfetti = () => {
-  if (!confettiContainer.value || !isSuccess.value) return
-
-  showConfetti.value = true
-  // Simple confetti effect without external library
-  // You can install canvas-confetti if needed
-  console.log('🎉 Confetti effect triggered!')
-}
-
-watch(showModal, (newValue) => {
-  if (newValue && isSuccess.value) {
-    nextTick(() => {
-      triggerConfetti()
-    })
-  }
-})
 </script>
 
 <style scoped>
 .challenge-complete-modal {
   min-width: 400px;
   max-width: 600px;
-}
-
-.confetti-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
 }
 
 .stats-summary {

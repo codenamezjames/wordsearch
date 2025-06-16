@@ -112,7 +112,7 @@
           </div>
 
           <div class="secondary-actions">
-            <q-btn
+            <!-- <q-btn
               flat
               class="secondary-btn"
               :to="{ name: 'stats' }"
@@ -127,7 +127,7 @@
               icon="settings"
               label="Settings"
               no-caps
-            />
+            /> -->
           </div>
         </div>
       </div>
